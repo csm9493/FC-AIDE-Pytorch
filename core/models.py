@@ -17,7 +17,7 @@ class FC_AIDE(nn.Module):
     def __init__(self, channel = 1, filters = 64, num_of_layers=10, output_type='linear'):
         super(FC_AIDE, self).__init__()
         
-        print ('FC-AIDE output type : ', output_type)
+#         print ('FC-AIDE output type : ', output_type)
        
         self.qed_first_layer = QED_first_layer(channel, filters).cuda()
         self.avg_first_layer = Average_layer(filters)
@@ -48,7 +48,76 @@ class FC_AIDE(nn.Module):
         self.qed = AttrProxy(self, 'qed_')
         self.avg = AttrProxy(self, 'avg_')
         self.residual_module = AttrProxy(self, 'residual_module_')
+
+#     def forward(self, x):
         
+# #         residual_output_arr = []
+        
+#         qed_output = self.qed_first_layer(x)
+#         avg_output = self.avg_first_layer(qed_output)
+#         residual_output = self.residual_module_first_layer(avg_output)
+# #         residual_output_arr.append(residual_output)
+
+# #         for i, (qed_layer, avg_layer, residual_layer)  in enumerate(zip(self.qed, self.avg, self.residual_module)):
+
+#         qed_output = getattr(self, 'qed_' + str(0))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(0))(qed_output)
+#         residual_output1 = getattr(self, 'residual_module_' + str(0))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output1), 0)
+        
+#         qed_output = getattr(self, 'qed_' + str(1))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(1))(qed_output)
+#         residual_output2 = getattr(self, 'residual_module_' + str(1))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output2), 0)
+        
+#         qed_output = getattr(self, 'qed_' + str(2))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(2))(qed_output)
+#         residual_output3 = getattr(self, 'residual_module_' + str(2))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output3), 0)
+        
+#         qed_output = getattr(self, 'qed_' + str(3))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(3))(qed_output)
+#         residual_output4 = getattr(self, 'residual_module_' + str(3))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output4), 0)
+        
+#         qed_output = getattr(self, 'qed_' + str(4))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(4))(qed_output)
+#         residual_output5 = getattr(self, 'residual_module_' + str(4))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output5), 0)
+        
+#         qed_output = getattr(self, 'qed_' + str(5))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(5))(qed_output)
+#         residual_output6 = getattr(self, 'residual_module_' + str(5))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output6), 0)
+        
+#         qed_output = getattr(self, 'qed_' + str(6))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(6))(qed_output)
+#         residual_output7 = getattr(self, 'residual_module_' + str(6))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output7), 0)
+        
+#         qed_output = getattr(self, 'qed_' + str(7))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(7))(qed_output)
+#         residual_output8 = getattr(self, 'residual_module_' + str(7))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output8), 0)
+        
+#         qed_output = getattr(self, 'qed_' + str(8))(qed_output)
+#         avg_output = getattr(self, 'avg_' + str(8))(qed_output)
+#         residual_output9 = getattr(self, 'residual_module_' + str(8))(avg_output)
+#         residual_output = torch.cat((residual_output, residual_output9), 0)
+        
+# #         print (residual_output.shape)
+            
+# #             if i >= self.num_layers - 2:
+# #                 break
+            
+#         output = torch.mean(residual_output, dim=0, keepdim = True)
+#         output = self.output_conv1(output)
+#         output = self.output_prelu1(output)
+#         output = self.output_residual_module(output)
+#         output = self.output_layer(output)
+        
+#         return output
+    
     def forward(self, x):
         
         residual_output_arr = []

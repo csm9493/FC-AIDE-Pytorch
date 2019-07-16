@@ -11,14 +11,14 @@ _noise_dist = 25
 _mini_batch_size = 1
 _learning_rate =0.001
 _model_name = 'DnCNN' #'Unet', 'DnCNN'
-_crop_size = 120 #size for cropping
+_crop_size = 100 #size for cropping
 _epochs = 50
 _drop_ep = 10
 _data_len = '100'
 _train_name = 'trdata_20500_patch_120x120.hdf5'
 _test_name = 'NIPS2018_berkeley_test_images_std25.mat'
 _training_type = 'specific'
-_output_type = 'linear'
+_output_type = 'linear' # 'bias' 'linear' 'polynomial'
 _case = '_test'
 
 _save_file_name = _date  + '_FCAIDE_sup' + '_' + _output_type+ '_' + _training_type + '_std' + str(_noise_dist) + _case

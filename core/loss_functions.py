@@ -36,9 +36,9 @@ def estimated_linear(output, target):
     
     a = output[:,0]
     b = output[:,1]
-    X = target[:,0]
-    Z = target[:,1]
-    sigma = target[:,2]
+#     X = target[:,0]
+    Z = target[:,0]
+    sigma = target[:,1]
     # E[(Z - (aZ+b))**2 + 2a(sigma**2) - sigma**2]
     loss = torch.mean((Z - (a*Z+b))**2 + 2*a*(sigma**2) - sigma**2)
     
@@ -52,7 +52,7 @@ def mse_polynomial(output, target):
     X = target[:,0]
     Z = target[:,1]
     # E[(X - (a(Z**2) +bZ + c))**2]
-    loss = torch.mean((X - (a*(Z**2) + b*z + c))**2)
+    loss = torch.mean((X - (a*(Z**2) + b*Z + c))**2)
     
     return loss
 
@@ -61,10 +61,10 @@ def estimated_polynomial(output, target):
     a = output[:,0]
     b = output[:,1]
     c = output[:,2]
-    X = target[:,0]
-    Z = target[:,1]
-    sigma = target[:,2]
+#     X = target[:,0]
+    Z = target[:,0]
+    sigma = target[:,1]
     # E[(Z - (a(Z**2) +bZ + c))**2 - 4*a*z*(sigma**2) + 2*b*(sigma**2) - sigma**2]
-    loss = torch.mean((Z - (a*(Z**2) + b*z + c))**2 - 4*a*z*(sigma**2) + 2*b*(sigma**2) -sigma**2)
+    loss = torch.mean((Z - (a*(Z**2) + b*Z + c))**2 - 4*a*Z*(sigma**2) + 2*b*(sigma**2) -sigma**2)
     
     return loss

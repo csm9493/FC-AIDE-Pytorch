@@ -1,20 +1,16 @@
 import torch
 from torch.utils.data import DataLoader
 
-import math
 import numpy as np
-from sklearn.metrics import mean_squared_error
-from skimage import measure
 import scipy.io as sio
 
-from .utils import TrdataLoader_supervised
-from .utils import TedataLoader_supervised
+from .utils import TedataLoader_supervised, TrdataLoader_supervised, get_PSNR, get_SSIM
 from .loss_functions import mse_bias, mse_linear, mse_polynomial
 from .logger import Logger
 from .models import FC_AIDE
 
 class Train_sup(object):
-    def __init__(self,_date, _tr_data_dir=None, _te_data_dir=None, _training_type=None,_output_type = 'linear', _noise_dist=25, _epochs=50,
+    def __init__(self,_date, _tr_data_dir=None, _te_data_dir=None, _training_type=None, _output_type = 'linear', _noise_dist=25, _epochs=50,
                  _drop_ep = 20, _mini_batch_size=64, _learning_rate=0.001, _crop_size = 100, _save_file_name=None):
         
         self.tr_data_dir = _tr_data_dir
@@ -79,23 +75,37 @@ class Train_sup(object):
         
         self.model = self.model.cuda()
         
-    def get_PSNR(self, X, X_hat):
-        
-        mse = mean_squared_error(X,X_hat)
-        test_PSNR = 10 * math.log10(1/mse)
-        
-        return test_PSNR
-    
-    def get_SSIM(self, X, X_hat):
-        
-        test_SSIM = measure.compare_ssim(X, X_hat, data_range=X.max() - X.min())
-        
-        return test_SSIM
-        
     def save_model(self, epoch):
 
         torch.save(self.model.state_dict(), './weights/'+self.save_file_name  +'_ep'+ str(epoch) + '.w')
         return
+    
+    def get_X_hat(self, target, output):
+        
+        if self.output_type == 'linear':
+            a = output[:,0]
+            b = output[:,1]
+
+            Z = target[:,1]
+
+            X_hat = a*Z+b
+            
+        elif self.output_type == 'polynomial':
+            a = output[:,0]
+            b = output[:,1]
+            c = output[:,2]
+
+            Z = target[:,1]
+
+            X_hat = a*(Z**2)+b*Z+c
+            
+        else:
+            
+            b = output[:,0]
+            
+            X_hat = b
+            
+        return X_hat
         
     def eval(self):
         """Evaluates denoiser on validation set."""
@@ -108,7 +118,7 @@ class Train_sup(object):
         with torch.no_grad():
         
             for batch_idx, (source, target) in enumerate(self.te_data_loader):
-
+                
                 source = source.cuda()
                 target = target.cuda()
 
@@ -122,17 +132,12 @@ class Train_sup(object):
                 output = output.cpu().numpy()
                 loss = loss.cpu().numpy()
                 
-                a = output[:,0]
-                b = output[:,1]
-                
-                X = target[:,0]
-                Z = target[:,1]
-                
-                X_hat = a*Z+b
+                X_hat = self.get_X_hat(target, output)
+                X = target[0,0]
                 
                 loss_arr.append(loss)
-                psnr_arr.append(self.get_PSNR(X_hat[0], X[0]))
-                ssim_arr.append(self.get_SSIM(X_hat[0], X[0]))
+                psnr_arr.append(get_PSNR(X, X_hat[0]))
+                ssim_arr.append(get_SSIM(X, X_hat[0]))
                 denoised_img_arr.append(X_hat[0])
                 
         mean_loss = np.mean(loss_arr)

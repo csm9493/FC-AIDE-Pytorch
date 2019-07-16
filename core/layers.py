@@ -72,7 +72,7 @@ class D2(nn.Module):
     def forward(self, x):
         self.conv1.weight.data =  self.conv1.weight * self.mask
         x = self.conv1(x)
-        return x        
+        return x 
     
 class QED_first_layer(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -91,7 +91,7 @@ class QED_first_layer(nn.Module):
         outputs.append(self.d1(x))
         
         return outputs  
-    
+   
 class QED_layer(nn.Module):
     def __init__(self, in_ch, out_ch, dilated_value):
         super(QED_layer, self).__init__()
@@ -118,6 +118,7 @@ class QED_layer(nn.Module):
         
         return outputs
     
+    
 class Average_layer(nn.Module):
     def __init__(self, in_ch):
         super(Average_layer, self).__init__()
@@ -125,8 +126,9 @@ class Average_layer(nn.Module):
         self.prelu = nn.PReLU(in_ch,0).cuda()
 
     def forward(self, inputs):
-        
+
         mean = torch.mean(torch.stack(inputs), dim=0)
+#         mean = torch.mean(inputs, dim=0, keepdim = True)
         output = self.prelu(mean)
         
         return output
@@ -154,3 +156,55 @@ class Residual_module(nn.Module):
         output = self.prelu2(output)
         
         return output
+    
+# class QED_first_layer(nn.Module):
+#     def __init__(self, in_ch, out_ch):
+#         super(QED_first_layer, self).__init__()
+        
+#         self.q1 = Q1(in_ch,out_ch)
+#         self.e1 = E1(in_ch,out_ch)
+#         self.d1 = D1(in_ch,out_ch)
+
+#     def forward(self, x):
+        
+#         outputs = []
+        
+#         outputs = torch.cat((self.q1(x), self.e1(x), self.d1(x)), )
+#         return outputs  
+    
+
+# class QED_layer(nn.Module):
+#     def __init__(self, in_ch, out_ch, dilated_value):
+#         super(QED_layer, self).__init__()
+        
+#         self.q2_prelu = nn.PReLU(in_ch,0).cuda()
+#         self.e2_prelu = nn.PReLU(in_ch,0).cuda()
+#         self.d2_prelu = nn.PReLU(in_ch,0).cuda()
+        
+#         self.q2 = Q2(in_ch,out_ch,dilated_value)
+#         self.e2 = E2(in_ch,out_ch,dilated_value)
+#         self.d2 = D2(in_ch,out_ch,dilated_value)
+
+#     def forward(self, inputs):
+        
+#         out_q2 = self.q2_prelu(self.q2(inputs[:1]))
+#         out_e2 = self.e2_prelu(self.e2(inputs[1:2]))
+#         out_d2 = self.d2_prelu(self.d2(inputs[2:3]))
+        
+#         outputs = torch.cat((out_q2, out_e2, out_d2), )
+        
+#         return outputs
+
+# class Average_layer(nn.Module):
+#     def __init__(self, in_ch):
+#         super(Average_layer, self).__init__()
+        
+#         self.prelu = nn.PReLU(in_ch,0).cuda()
+
+#     def forward(self, inputs):
+
+#         mean = torch.mean(torch.stack(inputs), dim=0)
+# #         mean = torch.mean(inputs, dim=0, keepdim = True)
+#         output = self.prelu(mean)
+        
+#         return output

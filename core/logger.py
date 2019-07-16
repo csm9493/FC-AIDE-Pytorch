@@ -6,7 +6,7 @@ import numpy as np
 import scipy.io as sio
 
 class Logger():
-    def __init__(self, n_epochs, batches_epoch, sv_file_name):
+    def __init__(self, n_epochs, batches_epoch, sv_file_name= None):
         self.n_epochs = n_epochs
         self.batches_epoch = batches_epoch
         self.epoch = 1

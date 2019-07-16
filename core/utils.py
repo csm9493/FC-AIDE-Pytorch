@@ -13,6 +13,10 @@ import h5py
 import random
 import torch
 
+import math
+from skimage import measure
+from sklearn.metrics import mean_squared_error
+
 class TrdataLoader_supervised():
 
     def __init__(self,_tr_data_dir=None, _train_type = None, _std=25, _crop_size = 100):
@@ -129,61 +133,105 @@ class TedataLoader_supervised():
 
         return source, target
     
-class Logger():
-    def __init__(self, n_epochs, batches_epoch, sv_file_name):
-        self.n_epochs = n_epochs
-        self.batches_epoch = batches_epoch
-        self.epoch = 1
-        self.batch = 1
-        self.prev_time = time.time()
-        self.mean_period = 0
-        self.losses = {}
-        self.loss_windows = {}
-        self.image_windows = {}
-        self.save_file_name = sv_file_name
-        self.loss_save = {}
+class TedataLoader_ft():
 
+    def __init__(self,_img=None, _augmented_type = 'Full'):
 
-    def log(self, losses=None, lr=None):
-        self.mean_period += (time.time() - self.prev_time)
-        self.prev_time = time.time()
-
-        sys.stdout.write('\rEpoch %03d/%03d [%04d/%04d] -- lr : [%04f]' % (self.epoch, self.n_epochs, self.batch, self.batches_epoch, lr))
-
-        for i, loss_name in enumerate(losses.keys()):
-            if loss_name not in self.losses:
-                self.losses[loss_name] = losses[loss_name].data.cpu().numpy()
-            else:
-                self.losses[loss_name] += losses[loss_name].data.cpu().numpy()
-
-            if (i+1) == len(losses.keys()):
-                sys.stdout.write('%s: %.4f -- ' % (loss_name, self.losses[loss_name]/self.batch))
-            else:
-                sys.stdout.write('%s: %.4f | ' % (loss_name, self.losses[loss_name]/self.batch))
-
-        batches_done = self.batches_epoch*(self.epoch - 1) + self.batch
-        batches_left = self.batches_epoch*(self.n_epochs - self.epoch) + self.batches_epoch - self.batch 
-        sys.stdout.write('ETA: %s' % (datetime.timedelta(seconds=batches_left*self.mean_period/batches_done)))
-
-        # End of epoch
-        if (self.batch % self.batches_epoch) == 0:
-            # Plot losses
-            for loss_name, loss in self.losses.items():
-                if loss_name not in self.loss_save:
-
-                    self.loss_save[loss_name] = []
-                    self.loss_save[loss_name].append(loss/self.batch)
-                    
-                else:
-                    self.loss_save[loss_name].append(loss/self.batch)
-                #Reset losses for next epoch
-                self.losses[loss_name] = 0.0
-
-                        
-            self.epoch += 1
-            self.batch = 1
-            sys.stdout.write('\n')
+        self.img = _img
+        self.augmented_type = _augmented_type
+        
+        self.augmented_data()
+        
+    def augmented_data(self):
+        if self.augmented_type == 'Full' or self.augmented_type == 'Test':
+            self.tr_data = np.zeros((4, self.img.shape[0], self.img.shape[1]))
+            
+            self.tr_data[0] = self.img
+            self.tr_data[1] = np.fliplr(self.img)
+            self.tr_data[2] = np.flipud(self.img)
+            self.tr_data[3] = np.fliplr(np.flipud(self.img))
         else:
-            self.batch += 1
+            self.tr_data = np.zeros((1, self.img.shape[0], self.img.shape[1]))
+            self.tr_data[0] = self.img
+            
+    def __len__(self):
+        return self.tr_data.shape[0]
+
+    def __getitem__(self, index):
+        """Retrieves image from folder and corrupts it."""
+
+        # Load PIL image
+        source = Image.fromarray((self.tr_data[index,:,:]))
+        target = Image.fromarray((self.tr_data[index,:,:]))
+
+        source = tvF.to_tensor(source)
+        target = tvF.to_tensor(target)
+        
+        return source, target
+    
+class TrdataLoader_ft():
+
+    def __init__(self, _img, _sigma, _augmented_type = 'Full', _patch_size = None):
+
+        self.img = _img
+        self.augmented_type = _augmented_type
+        self.sigma = _sigma
+        self.patch_size = _patch_size
+       
+        
+        self.augmented_data()
+        
+    def augmented_data(self):
+        if self.augmented_type == 'Full' or self.augmented_type == 'Training':
+            self.tr_data = np.zeros((4, self.img.shape[0], self.img.shape[1]))
+            
+            self.tr_data[0] = self.img
+            self.tr_data[1] = np.fliplr(self.img)
+            self.tr_data[2] = np.flipud(self.img)
+            self.tr_data[3] = np.fliplr(np.flipud(self.img))
+        else:
+            self.tr_data = np.zeros((1, self.img.shape[0], self.img.shape[1]))
+            self.tr_data[0] = self.img
+            
+    def __len__(self):
+        return self.tr_data.shape[0]
+
+    def __getitem__(self, index):
+        """Retrieves image from folder and corrupts it."""
+
+        # Load PIL image
+        source = Image.fromarray((self.tr_data[index,:,:]))
+        target = Image.fromarray((self.tr_data[index,:,:]))
+        sigma = Image.fromarray((np.ones((self.tr_data[index,:,:].shape[0], self.tr_data[index,:,:].shape[1]))*self.sigma/255.))
+        
+#         i, j, h, w = transforms.RandomCrop.get_params(source, output_size=(self.crop_size, self.crop_size))
+        if self.patch_size == None:
+            i, j, h, w = transforms.RandomCrop.get_params(source, output_size=(self.tr_data[index,:,:].shape[0], self.tr_data[index,:,:].shape[1]))
+        else:
+            i, j, h, w = transforms.RandomCrop.get_params(source, output_size=(self.patch_size, self.patch_size))
+        source = tvF.crop(source, i, j, h, w)
+        target = tvF.crop(target, i, j, h, w)
+        sigma = tvF.crop(sigma, i, j, h, w)
+
+        source = tvF.to_tensor(source)
+        target = tvF.to_tensor(target)
+        sigma = tvF.to_tensor(sigma)
+        
+        target = torch.cat([target,sigma], dim = 0)
+        
+        return source, target
+    
+def get_PSNR(X, X_hat):
+
+    mse = mean_squared_error(X,X_hat)
+    test_PSNR = 10 * math.log10(1/mse)
+
+    return test_PSNR
+
+def get_SSIM(X, X_hat):
+
+    test_SSIM = measure.compare_ssim(X, X_hat, data_range=X.max() - X.min())
+
+    return test_SSIM
 
 
